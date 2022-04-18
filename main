@@ -1,0 +1,117 @@
+import pygame
+from pygame.locals import *
+import sys
+import time
+import random
+
+class Game:
+
+    def __init__(self):
+        self.w = 750
+        self.h = 500
+        self.HEAD_C = (255,213,102)
+        self.TEXT_C= (255,255,255)
+        self.TEXT_CORRECT = (0,255,0)
+        self.TEXT_INCORRECT = (255,0,0)
+        self.input_text = ''
+        self.max_length = 50
+        self.test_sentence = 'Hello my name is Jonathan'
+        self.width = 0
+        self.index = 0
+        self.surfaces = []
+        self.positions = []
+
+        #initialize pygame window
+        pygame.init()
+        self.screen = pygame.display.set_mode((self.w,self.h))
+        pygame.display.set_caption('Typing Test')
+
+    #draws the text that is inside the input rectangle on the screen
+    def draw_text(self, screen, msg, y, fsize, color):
+        font = pygame.font.Font(None,fsize)
+        text = font.render(msg,1,color)
+        text_rect = text.get_rect(center=(self.w/2,y))
+        screen.blit(text,text_rect)
+        pygame.display.update()
+
+    #checks to see if inputted text is the same as the test sentence and
+    #changes the color of test sentence letters if inputted text matches.
+    def check_correctness(self,screen, msg, fsize, letter, index):
+        font = pygame.font.Font(None,fsize)
+        print(letter, msg[index])
+        if letter == msg[index]:
+            text = font.render(msg[index],1,self.TEXT_CORRECT)
+        elif letter == '\b':
+            text = font.render(msg[index],1,self.TEXT_C)
+        else:
+            text = font.render(msg[index],1,self.TEXT_INCORRECT)
+            #changes the text in the surface list at specified index to have a color of green if
+            #inputted text matches test sentence.
+        self.surfaces[index] = text
+        screen.blit(self.surfaces[index],(self.positions[index][0],self.positions[index][1]))
+        pygame.display.update()
+
+    #draws the test sentence with each letter being its own surface
+    #so that each letter of the test sentence can change color.
+    def draw_sentence(self, screen, msg, y, fsize, color):
+        self.width = 0
+        self.surfaces = []
+        self.positions = []
+
+        font = pygame.font.Font(None,fsize)
+        text_width, text_height = font.size(msg)
+
+        screen.fill(Color(0,0,0,0))
+
+        for i in range(len(msg)):
+            text = font.render(msg[i],1,color)
+            self.surfaces.append(text)
+        for i in range(len(self.surfaces)):
+            self.width += self.surfaces[i-1].get_rect().width
+            self.positions.append([self.width + self.w/2 - text_width/2 , y])
+        for i in range(len(self.surfaces)):
+            screen.blit(self.surfaces[i],(self.positions[i][0],self.positions[i][1]))
+
+
+
+
+
+
+
+    def run(self):
+        self.running = True
+        self.draw_sentence(self.screen, self.test_sentence, 200, 28, self.TEXT_C)
+        while self.running:
+            self.screen.fill((0,0,0),(50,250,650,50))
+            pygame.draw.rect(self.screen,self.HEAD_C, (50,250,650,50),2)
+            self.draw_text(self.screen,self.input_text,274,26,(250,250,250))
+
+            #self.index = max(0,self.index)
+
+            for event in pygame.event.get():
+                self.index = self.index % len(self.test_sentence)
+                if event.type == QUIT:
+                    self.running = False
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_BACKSPACE:
+                        self.input_text = self.input_text[:-1]
+                        self.index -= 1
+                        self.check_correctness(self.screen, self.test_sentence, 28, '\b', self.index)
+                    elif event.key != pygame.K_LSHIFT and len(self.input_text) < self.max_length:
+                        self.input_text += event.unicode
+                        self.check_correctness(self.screen, self.test_sentence, 28, event.unicode, self.index)
+                        self.index += 1
+
+
+
+            pygame.display.update()
+
+
+
+
+
+if __name__ == '__main__':
+    Game().run()
+
+
