@@ -51,7 +51,7 @@ class Game:
         screen.blit(self.surfaces[index],(self.positions[index][0],self.positions[index][1]))
         pygame.display.update()
 
-    #draws the test sentence with each letter being its own surface
+    #draws the test sentence with each letter being separate
     #so that each letter of the test sentence can change color.
     def draw_sentence(self, screen, msg, y, fsize, color):
         self.width = 0
@@ -71,10 +71,6 @@ class Game:
             self.positions.append([self.width + self.w/2 - text_width/2 , y])
         for i in range(len(self.surfaces)):
             screen.blit(self.surfaces[i],(self.positions[i][0],self.positions[i][1]))
-
-
-
-
 
 
 
@@ -98,9 +94,12 @@ class Game:
                         self.input_text = self.input_text[:-1]
                         self.index -= 1
                         self.check_correctness(self.screen, self.test_sentence, 28, '\b', self.index)
+
                     elif event.key != pygame.K_LSHIFT and len(self.input_text) < self.max_length:
                         self.input_text += event.unicode
                         self.check_correctness(self.screen, self.test_sentence, 28, event.unicode, self.index)
+                        if event.key == pygame.K_SPACE:
+                            self.input_text = ''
                         self.index += 1
 
 
