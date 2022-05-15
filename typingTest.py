@@ -2,10 +2,9 @@ import pygame
 from pygame.locals import *
 import sys
 import time
-import random
 from itertools import cycle
+from main_menu import main_menu
 
-# 750 x 500
 
 class Game:
 
@@ -14,12 +13,14 @@ class Game:
         self.h = 750
         self.reset = True
         self.active = False
+        self.is_start = False
         self.input_text = ''
         self.word = ''
         self.time_start = 0
+        self.end_time = 0
         self.total_time = 0
         self.total_typed = 0
-        self.accuracy = '0%'
+        self.accuracy = 0
         self.results = 'Time: 0 secs        Accuracy: 0%        wpm: 0'
         self.wpm = 0
         self.end = False
@@ -35,6 +36,13 @@ class Game:
 
         self.screen = pygame.display.set_mode((self.w, self.h))
         pygame.display.set_caption('Type Tester')
+
+    def draw_menu_text(self, screen, msg, y, fsize, color):
+        font = pygame.font.Font(None, fsize)
+        text = font.render(msg, 1, color)
+        text_rect = text.get_rect(topleft=(25, y))
+        screen.blit(text, text_rect)
+        pygame.display.update()
 
     def draw_text(self, screen, msg, y, fsize, color):
         font = pygame.font.Font(None, fsize)
@@ -58,7 +66,7 @@ class Game:
     def show_results(self, screen):
         if not self.end:
             # Calculate time
-            self.total_time = time.time() - self.time_start
+            self.total_time = self.end_time - self.time_start
 
             # Calculate accuracy
             count = 0
@@ -91,7 +99,7 @@ class Game:
         self.input_text = ''
 
         self.running = True
-        while (self.running):
+        while self.running:
             clock = pygame.time.Clock()
             self.screen.fill((255, 255, 255), (50, 345, 900, 75))
             pygame.draw.rect(self.screen, self.RECT_C, (50, 345, 900, 75), 3)
@@ -105,14 +113,20 @@ class Game:
 
                 elif event.type == pygame.MOUSEBUTTONUP:
                     x, y = pygame.mouse.get_pos()
+                    if 0 <= x <= 150 and 0 <= y <= 50:
+                        main_menu()
                     if 310 <= x <= 510 and y >= 600 and self.end:
                         self.reset_game()
                         x, y = pygame.mouse.get_pos()
 
                 elif event.type == pygame.KEYDOWN:
+                    if self.is_start:
+                        self.time_start = time.time()
+                        self.is_start = False
                     if self.active and not self.end:
                         self.total_typed += 1
                         if event.key == pygame.K_RETURN:
+                            self.end_time = time.time()
                             self.total_typed -= 1
                             self.show_results(self.screen)
                             self.draw_text(self.screen, self.results, self.h - 200, 36, self.RESULT_C)
@@ -136,6 +150,7 @@ class Game:
     def reset_game(self):
         self.reset = False
         self.end = False
+        self.is_start = True
 
         self.input_text = ''
         self.word = ''
@@ -152,15 +167,11 @@ class Game:
         self.screen.fill((255, 255, 255))
         msg = "Type Tester"
         self.draw_text(self.screen, msg, 80, 80, self.HEAD_C)
+        self.draw_menu_text(self.screen, "Main Menu", 25, 30, self.HEAD_C)
         # draw the rectangle for input box
         pygame.draw.rect(self.screen, self.RECT_C, (50, 345, 900, 75), 3)
 
         # draw the sentence string
         self.draw_text(self.screen, self.word, 275, 40, self.TEXT_C)
 
-        self.time_start = time.time()
-
         pygame.display.update()
-
-if __name__ == '__main__':
-    Game().run()
