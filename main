@@ -2,11 +2,13 @@ import pygame
 import pygame.freetype
 import random
 
+
 def initialize(current, font, screen):
     text_surf_rect = []
     baseline = []
     text_surf = []
     metrics = []
+
     for i in range(len(current)):
         text_surf_rect.append(font.get_rect(current[i]))
         # in this rect, the y property is the baseline
@@ -18,7 +20,7 @@ def initialize(current, font, screen):
         # and center it on the screen
     for i in range(len(text_surf_rect)):
         text_surf.append(pygame.Surface(text_surf_rect[i].size))
-        text_surf_rect[i].centerx = screen.get_rect().centerx
+        text_surf_rect[i].left = screen.get_rect().left + (screen.get_rect().width / 10)
         # text_surf = pygame.Surface(text_surf_rect.size)
 
         # calculate the width (and other stuff) for each letter of the text
@@ -27,8 +29,24 @@ def initialize(current, font, screen):
 
     return text_surf_rect, baseline, text_surf, metrics
 
+
+def render_sentence(current, baseline, text_surf, font, metrics, x, index, sentence1, M_ADV_X):
+    for (idx, (letter, metric)) in enumerate(zip(current[index], metrics[index])):
+        if index == 0:
+            if sentence1:
+                color = 'lightgrey'
+            else:
+                color = 'black'
+        else:
+            color = 'black'
+        # render the single letter
+        font.render_to(text_surf[index], (x, baseline[index]), letter, color)
+        # and move the start position
+        x += metric[M_ADV_X]
+
+
 def generate_word_bank():
-    infile = open('common_words.txt','r')
+    infile = open('common_words.txt', 'r')
 
     wordBank = []
     for line in infile:
@@ -37,19 +55,28 @@ def generate_word_bank():
     infile.close()
     return wordBank
 
+
 def generate_sentences(wordBank):
     sentence = ""
     while len(sentence) < 40:
         sentence = sentence + random.choice(wordBank) + " "
     return sentence
+
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
+    is_start = True
 
-    wordBank = generate_word_bank()
-    sentence = generate_sentences(wordBank)
+    word_bank = generate_word_bank()
+    sentence = generate_sentences(word_bank)
+    timer60 = pygame.USEREVENT + 1
+    timer_sec = 60
 
-    current = [generate_sentences(wordBank), generate_sentences(wordBank),generate_sentences(wordBank)]
+    timer_font = pygame.font.Font('freesansbold.ttf', 38)
+    timer_text = timer_font.render("01:00", True, (0, 0, 0))
+
+    current = [generate_sentences(word_bank), generate_sentences(word_bank), generate_sentences(word_bank)]
     current_idx = 0  # points to the current letter, as you have already guessed
 
     font = pygame.freetype.Font(None, 30)
@@ -63,89 +90,55 @@ def main():
     # we want to know how much space each letter takes during rendering.
     # the item at index 4 is the 'horizontal_advance_x'
     M_ADV_X = 4
-    isSentence1 = False
-    isSentence2 = False
-    isSentence3 = False
+    is_sentence1 = False
 
-    text_surf_rect, baseline, text_surf, metrics = initialize(current,font,screen)
+    text_surf_rect, baseline, text_surf, metrics = initialize(current, font, screen)
     i = 0
     while True:
         events = pygame.event.get()
         for e in events:
             if e.type == pygame.QUIT:
                 return
+
             if e.type == pygame.KEYDOWN:
-                if e.unicode == current[i][current_idx].lower():
-                    # if we press the correct letter, move the index
-                    current_idx += 1
-                    if current_idx >= len(current[i]):
-                        # if the sentence is complete, let's prepare the
-                        # next surface
-                        if i == 0:
-                            isSentence1 = True
-                        elif i == 1:
 
-                            current.pop(0)
-                            current.append(sentence)
-                            text_surf_rect, baseline, text_surf, metrics = initialize(current, font, screen)
-                            sentence = generate_sentences(wordBank)
+                if is_start:
+                    pygame.time.set_timer(timer60, 1000)
+                    is_start = False
 
-                        else:
-                            isSentence3 = True
-                        i = 1
-                        current_idx = 0
+                if timer_sec > 0:
+                    if e.unicode == current[i][current_idx].lower():
+                        # if we press the correct letter, move the index
+                        current_idx += 1
+                        if current_idx >= len(current[i]):
 
-                        '''current_idx = 0
-                        current = data
-                        text_surf_rect = font.get_rect(current)
-                        baseline = text_surf_rect.y
-                        text_surf = pygame.Surface(text_surf_rect.size)
-                        text_surf_rect.center = screen.get_rect().center
-                        metrics = font.get_metrics(current)'''
+                            if i == 0:
+                                is_sentence1 = True
+                            elif i == 1:
+
+                                current.pop(0)
+                                current.append(sentence)
+                                text_surf_rect, baseline, text_surf, metrics = initialize(current, font, screen)
+                                sentence = generate_sentences(word_bank)
+
+                            i = 1
+                            current_idx = 0
+
+            if e.type == timer60:
+                if timer_sec > 0:
+                    timer_sec -= 1
+                    timer_text = timer_font.render("00:%02d" % timer_sec, True, (0, 0, 0))
 
         # clear everything
         screen.fill('white')
         for z in range(len(current)):
             text_surf[z].fill('white')
 
-        # render each letter of the current sentence one by one
         x = 0
-        for (idx, (letter, metric)) in enumerate(zip(current[0], metrics[0])):
-            # select the right color
-            if isSentence1:
-                color = 'lightgrey'
-            else:
-                color = 'black'
-            # render the single letter
-            font.render_to(text_surf[0], (x, baseline[0]), letter, color)
-            # and move the start position
-            x += metric[M_ADV_X]
-        x = 0
-        for (idx, (letter, metric)) in enumerate(zip(current[1], metrics[1])):
-            # select the right color
-            if isSentence2:
-                color = 'lightgrey'
+        render_sentence(current, baseline, text_surf, font, metrics, x, 0, is_sentence1, M_ADV_X)
+        render_sentence(current, baseline, text_surf, font, metrics, x, 1, is_sentence1, M_ADV_X)
+        render_sentence(current, baseline, text_surf, font, metrics, x, 2, is_sentence1, M_ADV_X)
 
-            else:
-                color = 'black'
-            # render the single letter
-            font.render_to(text_surf[1], (x, baseline[1]), letter, color)
-            # and move the start position
-            x += metric[M_ADV_X]
-        x = 0
-        for (idx, (letter, metric)) in enumerate(zip(current[2], metrics[2])):
-
-            # select the right color
-            if isSentence3:
-                color = 'lightgrey'
-            else:
-                color = 'black'
-            # render the single letter
-            font.render_to(text_surf[2], (x, baseline[2]), letter, color)
-            # and move the start position
-            x += metric[M_ADV_X]
-
-        x = 0
         for (idx, (letter, metric)) in enumerate(zip(current[i], metrics[i])):
 
             # select the right color
@@ -163,6 +156,7 @@ def main():
         screen.blit(text_surf[0], text_surf_rect[0])
         screen.blit(text_surf[1], (text_surf_rect[1].x, text_surf_rect[1].y + 60))
         screen.blit(text_surf[2], (text_surf_rect[2].x, text_surf_rect[2].y + 120))
+        screen.blit(timer_text, (screen.get_rect().left + (screen.get_rect().width / 10), 300))
         pygame.display.flip()
 
 
