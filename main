@@ -1,116 +1,170 @@
 import pygame
-from pygame.locals import *
-import sys
-import time
+import pygame.freetype
 import random
 
-class Game:
+def initialize(current, font, screen):
+    text_surf_rect = []
+    baseline = []
+    text_surf = []
+    metrics = []
+    for i in range(len(current)):
+        text_surf_rect.append(font.get_rect(current[i]))
+        # in this rect, the y property is the baseline
+        # we use since we use the origin mode
+    for i in range(len(text_surf_rect)):
+        # text_surf_rect[i].y = text_surf_rect[i].y + (i* 15)
+        baseline.append(text_surf_rect[i].y)
+        # now let's create a surface to render the text on
+        # and center it on the screen
+    for i in range(len(text_surf_rect)):
+        text_surf.append(pygame.Surface(text_surf_rect[i].size))
+        text_surf_rect[i].centerx = screen.get_rect().centerx
+        # text_surf = pygame.Surface(text_surf_rect.size)
 
-    def __init__(self):
-        self.w = 750
-        self.h = 500
-        self.HEAD_C = (255,213,102)
-        self.TEXT_C= (255,255,255)
-        self.TEXT_CORRECT = (0,255,0)
-        self.TEXT_INCORRECT = (255,0,0)
-        self.input_text = ''
-        self.max_length = 50
-        self.test_sentence = 'Hello my name is Jonathan'
-        self.width = 0
-        self.index = 0
-        self.surfaces = []
-        self.positions = []
+        # calculate the width (and other stuff) for each letter of the text
+    for i in range(len(current)):
+        metrics.append(font.get_metrics(current[i]))
 
-        #initialize pygame window
-        pygame.init()
-        self.screen = pygame.display.set_mode((self.w,self.h))
-        pygame.display.set_caption('Typing Test')
+    return text_surf_rect, baseline, text_surf, metrics
 
-    #draws the text that is inside the input rectangle on the screen
-    def draw_text(self, screen, msg, y, fsize, color):
-        font = pygame.font.Font(None,fsize)
-        text = font.render(msg,1,color)
-        text_rect = text.get_rect(center=(self.w/2,y))
-        screen.blit(text,text_rect)
-        pygame.display.update()
+def generate_word_bank():
+    infile = open('common_words.txt','r')
 
-    #checks to see if inputted text is the same as the test sentence and
-    #changes the color of test sentence letters if inputted text matches.
-    def check_correctness(self,screen, msg, fsize, letter, index):
-        font = pygame.font.Font(None,fsize)
-        print(letter, msg[index])
-        if letter == msg[index]:
-            text = font.render(msg[index],1,self.TEXT_CORRECT)
-        elif letter == '\b':
-            text = font.render(msg[index],1,self.TEXT_C)
-        else:
-            text = font.render(msg[index],1,self.TEXT_INCORRECT)
-            #changes the text in the surface list at specified index to have a color of green if
-            #inputted text matches test sentence.
-        self.surfaces[index] = text
-        screen.blit(self.surfaces[index],(self.positions[index][0],self.positions[index][1]))
-        pygame.display.update()
+    wordBank = []
+    for line in infile:
+        line = line.rstrip()
+        wordBank.append(line)
+    infile.close()
+    return wordBank
 
-    #draws the test sentence with each letter being separate
-    #so that each letter of the test sentence can change color.
-    def draw_sentence(self, screen, msg, y, fsize, color):
-        self.width = 0
-        self.surfaces = []
-        self.positions = []
+def generate_sentences(wordBank):
+    sentence = ""
+    while len(sentence) < 40:
+        sentence = sentence + random.choice(wordBank) + " "
+    return sentence
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600))
 
-        font = pygame.font.Font(None,fsize)
-        text_width, text_height = font.size(msg)
+    wordBank = generate_word_bank()
+    sentence = generate_sentences(wordBank)
 
-        screen.fill(Color(0,0,0,0))
+    current = [generate_sentences(wordBank), generate_sentences(wordBank),generate_sentences(wordBank)]
+    current_idx = 0  # points to the current letter, as you have already guessed
 
-        for i in range(len(msg)):
-            text = font.render(msg[i],1,color)
-            self.surfaces.append(text)
-        for i in range(len(self.surfaces)):
-            self.width += self.surfaces[i-1].get_rect().width
-            self.positions.append([self.width + self.w/2 - text_width/2 , y])
-        for i in range(len(self.surfaces)):
-            screen.blit(self.surfaces[i],(self.positions[i][0],self.positions[i][1]))
+    font = pygame.freetype.Font(None, 30)
+    # the font in the new freetype module have an origin property.
+    # if you set this to True, the render functions take the dest position
+    # to be that of the text origin, as opposed to the top-left corner
+    # of the bounding box
+    font.origin = True
+    font_height = font.get_sized_height()
 
+    # we want to know how much space each letter takes during rendering.
+    # the item at index 4 is the 'horizontal_advance_x'
+    M_ADV_X = 4
+    isSentence1 = False
+    isSentence2 = False
+    isSentence3 = False
 
+    text_surf_rect, baseline, text_surf, metrics = initialize(current,font,screen)
+    i = 0
+    while True:
+        events = pygame.event.get()
+        for e in events:
+            if e.type == pygame.QUIT:
+                return
+            if e.type == pygame.KEYDOWN:
+                if e.unicode == current[i][current_idx].lower():
+                    # if we press the correct letter, move the index
+                    current_idx += 1
+                    if current_idx >= len(current[i]):
+                        # if the sentence is complete, let's prepare the
+                        # next surface
+                        if i == 0:
+                            isSentence1 = True
+                        elif i == 1:
 
-    def run(self):
-        self.running = True
-        self.draw_sentence(self.screen, self.test_sentence, 200, 28, self.TEXT_C)
-        while self.running:
-            self.screen.fill((0,0,0),(50,250,650,50))
-            pygame.draw.rect(self.screen,self.HEAD_C, (50,250,650,50),2)
-            self.draw_text(self.screen,self.input_text,274,26,(250,250,250))
+                            current.pop(0)
+                            current.append(sentence)
+                            text_surf_rect, baseline, text_surf, metrics = initialize(current, font, screen)
+                            sentence = generate_sentences(wordBank)
 
-            #self.index = max(0,self.index)
+                        else:
+                            isSentence3 = True
+                        i = 1
+                        current_idx = 0
 
-            for event in pygame.event.get():
-                self.index = self.index % len(self.test_sentence)
-                if event.type == QUIT:
-                    self.running = False
-                    sys.exit()
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_BACKSPACE:
-                        self.input_text = self.input_text[:-1]
-                        self.index -= 1
-                        self.check_correctness(self.screen, self.test_sentence, 28, '\b', self.index)
+                        '''current_idx = 0
+                        current = data
+                        text_surf_rect = font.get_rect(current)
+                        baseline = text_surf_rect.y
+                        text_surf = pygame.Surface(text_surf_rect.size)
+                        text_surf_rect.center = screen.get_rect().center
+                        metrics = font.get_metrics(current)'''
 
-                    elif event.key != pygame.K_LSHIFT and len(self.input_text) < self.max_length:
-                        self.input_text += event.unicode
-                        self.check_correctness(self.screen, self.test_sentence, 28, event.unicode, self.index)
-                        if event.key == pygame.K_SPACE:
-                            self.input_text = ''
-                        self.index += 1
+        # clear everything
+        screen.fill('white')
+        for z in range(len(current)):
+            text_surf[z].fill('white')
 
+        # render each letter of the current sentence one by one
+        x = 0
+        for (idx, (letter, metric)) in enumerate(zip(current[0], metrics[0])):
+            # select the right color
+            if isSentence1:
+                color = 'lightgrey'
+            else:
+                color = 'black'
+            # render the single letter
+            font.render_to(text_surf[0], (x, baseline[0]), letter, color)
+            # and move the start position
+            x += metric[M_ADV_X]
+        x = 0
+        for (idx, (letter, metric)) in enumerate(zip(current[1], metrics[1])):
+            # select the right color
+            if isSentence2:
+                color = 'lightgrey'
 
+            else:
+                color = 'black'
+            # render the single letter
+            font.render_to(text_surf[1], (x, baseline[1]), letter, color)
+            # and move the start position
+            x += metric[M_ADV_X]
+        x = 0
+        for (idx, (letter, metric)) in enumerate(zip(current[2], metrics[2])):
 
-            pygame.display.update()
+            # select the right color
+            if isSentence3:
+                color = 'lightgrey'
+            else:
+                color = 'black'
+            # render the single letter
+            font.render_to(text_surf[2], (x, baseline[2]), letter, color)
+            # and move the start position
+            x += metric[M_ADV_X]
 
+        x = 0
+        for (idx, (letter, metric)) in enumerate(zip(current[i], metrics[i])):
 
+            # select the right color
+            if idx == current_idx:
+                color = 'lightblue'
+            elif idx < current_idx:
+                color = 'lightgrey'
+            else:
+                color = 'black'
+            # render the single letter
+            font.render_to(text_surf[i], (x, baseline[i]), letter, color)
+            # and move the start position
+            x += metric[M_ADV_X]
 
+        screen.blit(text_surf[0], text_surf_rect[0])
+        screen.blit(text_surf[1], (text_surf_rect[1].x, text_surf_rect[1].y + 60))
+        screen.blit(text_surf[2], (text_surf_rect[2].x, text_surf_rect[2].y + 120))
+        pygame.display.flip()
 
 
 if __name__ == '__main__':
-    Game().run()
-
-
+    main()
