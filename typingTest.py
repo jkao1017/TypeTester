@@ -32,11 +32,6 @@ class Game:
         self.data = ''
 
         pygame.init()
-        # self.open_img = pygame.image.load('type-speed-open.png')
-        # self.open_img = pygame.transform.scale(self.open_img, (self.w, self.h))
-        #
-        # self.bg = pygame.image.load('background.jpg')
-        # self.bg = pygame.transform.scale(self.bg, (500, 750))
 
         self.screen = pygame.display.set_mode((self.w, self.h))
         pygame.display.set_caption('Type Tester')
@@ -58,13 +53,6 @@ class Game:
         self.data = cycle(text)
 
     def get_sentence(self):
-        # f = open('sentences.txt', 'r')
-        # sentences = f.split('\n')
-        # sentence = random.choice(sentences)
-        # while sentence == self.previous:
-        #     sentence = random.choice(sentences)
-        # self.previous = sentence
-        # return sentence
         return next(self.data)
 
     def show_results(self, screen):
@@ -81,6 +69,8 @@ class Game:
                 except:
                     pass
             self.accuracy = (count - (self.total_typed - count)) / len(self.word) * 100
+            if self.accuracy < 0:
+                self.accuracy = 0
 
             # Calculate words per minute
             self.wpm = len(self.input_text) * 60 / (5 * self.total_time)
@@ -97,6 +87,9 @@ class Game:
         self.open_sentences()
         self.reset_game()
 
+        self.active = True
+        self.input_text = ''
+
         self.running = True
         while (self.running):
             clock = pygame.time.Clock()
@@ -112,12 +105,6 @@ class Game:
 
                 elif event.type == pygame.MOUSEBUTTONUP:
                     x, y = pygame.mouse.get_pos()
-                    # position of input box
-                    if 50 <= x <= 750 and 345 <= y <= 400:
-                        self.active = True
-                        self.input_text = ''
-                        self.time_start = time.time()
-                        # position of reset box
                     if 310 <= x <= 510 and y >= 600 and self.end:
                         self.reset_game()
                         x, y = pygame.mouse.get_pos()
@@ -157,7 +144,7 @@ class Game:
         self.total_typed = 0
         self.wpm = 0
 
-        # Get random sentence
+        # Get next sentence
         self.word = self.get_sentence()
         if not self.word:
             self.reset_game()
@@ -170,6 +157,8 @@ class Game:
 
         # draw the sentence string
         self.draw_text(self.screen, self.word, 275, 40, self.TEXT_C)
+
+        self.time_start = time.time()
 
         pygame.display.update()
 
