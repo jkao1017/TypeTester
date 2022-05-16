@@ -163,11 +163,11 @@ def main(seconds):
 
     timer_font = pygame.font.Font(None, 38)
     if seconds == 15:
-        timer_text = timer_font.render("00:15", True, (124, 91, 86))
+        timer_text = timer_font.render("00:15", True, (243, 131, 115))
     elif seconds == 30:
-        timer_text = timer_font.render("00:30", True, (124, 91, 86))
+        timer_text = timer_font.render("00:30", True, (243, 131, 115))
     else:
-        timer_text = timer_font.render("01:00", True, (124, 91, 86))
+        timer_text = timer_font.render("01:00", True, (243, 131, 115))
     current = [generate_sentences(word_bank), generate_sentences(word_bank), generate_sentences(word_bank)]
     current_idx = 0  # points to the current letter, as you have already guessed
 
@@ -229,7 +229,7 @@ def main(seconds):
             if e.type == timer:
                 if timer_sec > 0:
                     timer_sec -= 1
-                    timer_text = timer_font.render("00:%02d" % timer_sec, True, (124, 91, 86))
+                    timer_text = timer_font.render("00:%02d" % timer_sec, True, (243, 131, 115))
 
         # clear everything
         screen.fill((255, 237, 225))
@@ -263,7 +263,7 @@ def main(seconds):
                 wpm = (count / 5) * 2
             else:
                 wpm = (count/5)
-            wpm_text = timer_font.render('Words Per Minute: ' + str(wpm), True, (124, 91, 86))
+            wpm_text = timer_font.render('Words Per Minute: ' + str(wpm), True, (219, 101, 81))
             screen.blit(wpm_text, (350, 400))
 
         screen.blit(text_surf[0], (text_surf_rect[0].x + 50, text_surf_rect[0].y + 180))
@@ -454,3 +454,4 @@ class Game:
 
 if __name__ == '__main__':
     main_menu()
+
