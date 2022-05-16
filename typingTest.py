@@ -1,9 +1,8 @@
-import pygame
 from pygame.locals import *
+from itertools import cycle
+import pygame
 import sys
 import time
-from itertools import cycle
-from main_menu import main_menu
 
 
 class Game:
@@ -114,6 +113,7 @@ class Game:
                 elif event.type == pygame.MOUSEBUTTONUP:
                     x, y = pygame.mouse.get_pos()
                     if 0 <= x <= 150 and 0 <= y <= 50:
+                        self.running = False
                         main_menu()
                     if 310 <= x <= 510 and y >= 600 and self.end:
                         self.reset_game()
@@ -175,3 +175,65 @@ class Game:
         self.draw_text(self.screen, self.word, 275, 40, self.TEXT_C)
 
         pygame.display.update()
+
+
+def draw_text(screen, msg, y, fsize, color):
+    font = pygame.font.Font(None, fsize)
+    text = font.render(msg, 1, color)
+    text_rect = text.get_rect(center=(1000 / 2, y))
+    screen.blit(text, text_rect)
+    pygame.display.update()
+
+
+def main_menu():
+    color = (124, 91, 86)
+
+    pygame.init()
+    screen = pygame.display.set_mode((1000, 750))
+    pygame.display.set_caption('Type Tester')
+
+    screen.fill((255, 255, 255))
+
+    msg = "Type Tester"
+    draw_text(screen, msg, 100, 100, color)
+    draw_text(screen, "Free-type", 250, 60, color)
+    draw_text(screen, "15 seconds", 350, 60, color)
+    draw_text(screen, "30 seconds", 450, 60, color)
+    draw_text(screen, "60 seconds", 550, 60, color)
+
+    pygame.display.update()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                x, y = pygame.mouse.get_pos()
+                if 350 <= x <= 650 and 225 <= y <= 275:
+                    # print('free type call')
+                    game = Game()
+                    game.run()
+                elif 350 <= x <= 650 and 325 <= y <= 375:
+                    print('15 seconds call')
+                    # call 15 second type test
+                    # change next line once implemented
+                    pass
+                elif 350 <= x <= 650 and 425 <= y <= 475:
+                    print('30 seconds call')
+                    # call 15 second type test
+                    # change next line once implemented
+                    pass
+                elif 350 <= x <= 650 and 525 <= y <= 575:
+                    print('60 seconds call')
+                    # call 15 second type test
+                    # change next line once implemented
+                    pass
+
+        pygame.display.update()
+
+
+if __name__ == '__main__':
+    main_menu()
+    
