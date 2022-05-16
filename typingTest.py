@@ -1,3 +1,36 @@
+# Authors: Gabrielle David, Jonathan Kao
+# How to run Typing Tester:
+#   Run program from typingTest.py
+#   The main menu will have 4 options:
+#       1. Free-type
+#       2. 15 seconds
+#       3. 30 seconds
+#       4. 60 seconds
+#   When clicking each of these options by using the
+#   mouse, the player will be redirected to each
+#   corresponding typing test.
+#   1. Free-type:
+#       A prompt will be shown on the screen, and
+#       the player must type the prompt as fast as
+#       they can. When the player hits the "Return" key,
+#       the time taken to type the prompt, accuracy,
+#       and words per minute are displayed on screen.
+#       The player can choose to restart and receive
+#       a new typing test prompt, or they can return
+#       to the main menu by pressing the Main Menu button.
+#   2. 15 seconds, 30 seconds, 60 seconds:
+#       Two lines of text are displayed on the screen, and
+#       the player must type each letter correctly before
+#       they can type the next. After the player correctly
+#       types 2 lines, a new line of words will display,
+#       and the first line will disappear. The timer starts 
+#       once the player starts typing, and the time
+#       remaining is displayed on the screen. Once the time is up,
+#       the words per minute are displayed on the screen.
+#       The player can return to the Main Menu to restart
+#       the game or try another typing test.
+
+
 import time
 from itertools import cycle
 import sys
